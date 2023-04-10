@@ -55,7 +55,6 @@ func (controller *CategoryControllerImpl) Update(writer http.ResponseWriter, req
 }
 
 func (controller *CategoryControllerImpl) Delete(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
-	//	select id
 	categoryId := params.ByName("categoryId")
 	id, err := strconv.Atoi(categoryId)
 	helper.PanicIfError(err)
@@ -65,6 +64,7 @@ func (controller *CategoryControllerImpl) Delete(writer http.ResponseWriter, req
 		Code:   200,
 		Status: "OK",
 	}
+
 	helper.WriteToResponseBody(writer, webResponse)
 }
 

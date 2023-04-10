@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"github.com/go-playground/validator/v10"
+	"go_restful_api/exception"
 	"go_restful_api/helper"
 	"go_restful_api/model/domain"
 	"go_restful_api/model/web"
@@ -24,7 +25,7 @@ func NewCategoryService(categoryRepository repository.CategoryRepository, DB *sq
 	}
 }
 
-func (service CategoryServiceImpl) Create(ctx context.Context, request web.CategoryCreateRequest) web.CategoryResponse {
+func (service *CategoryServiceImpl) Create(ctx context.Context, request web.CategoryCreateRequest) web.CategoryResponse {
 	//validation first
 	err := service.Validate.Struct(request)
 	helper.PanicIfError(err)
@@ -41,7 +42,7 @@ func (service CategoryServiceImpl) Create(ctx context.Context, request web.Categ
 
 }
 
-func (service CategoryServiceImpl) Update(ctx context.Context, request web.CategoryUpdateRequest) web.CategoryResponse {
+func (service *CategoryServiceImpl) Update(ctx context.Context, request web.CategoryUpdateRequest) web.CategoryResponse {
 	//validation first
 	err := service.Validate.Struct(request)
 	helper.PanicIfError(err)
@@ -52,7 +53,9 @@ func (service CategoryServiceImpl) Update(ctx context.Context, request web.Categ
 
 	//to check category available or not
 	category, err := service.CategoryRepository.FindById(ctx, tx, request.Id)
-	helper.PanicIfError(err) // if category not found send error
+	if err != nil {
+		panic(exception.NewNotFoundError(err.Error()))
+	} // if category not found send error
 
 	// if category available send request
 	category.Name = request.Name
@@ -61,33 +64,35 @@ func (service CategoryServiceImpl) Update(ctx context.Context, request web.Categ
 	return helper.ToCategoryResponse(category)
 }
 
-func (service CategoryServiceImpl) Delete(ctx context.Context, categoryId int) {
+func (service *CategoryServiceImpl) Delete(ctx context.Context, categoryId int) {
 	tx, err := service.DB.Begin()
 	helper.PanicIfError(err)
 	defer helper.CommitOrRollback(tx)
 
-	//check category id available or not
 	category, err := service.CategoryRepository.FindById(ctx, tx, categoryId)
-	helper.PanicIfError(err) // if category id not found send error
+	if err != nil {
+		panic(exception.NewNotFoundError(err.Error()))
+	}
 
-	// if category id available delete it
 	service.CategoryRepository.Delete(ctx, tx, category)
 }
 
-func (service CategoryServiceImpl) FindById(ctx context.Context, categoryId int) web.CategoryResponse {
+func (service *CategoryServiceImpl) FindById(ctx context.Context, categoryId int) web.CategoryResponse {
 	tx, err := service.DB.Begin()
 	helper.PanicIfError(err)
 	defer helper.CommitOrRollback(tx)
 
 	//check category id available or not
 	category, err := service.CategoryRepository.FindById(ctx, tx, categoryId)
-	helper.PanicIfError(err) // if category id not found send error
+	if err != nil {
+		panic(exception.NewNotFoundError(err.Error()))
+	} // if category not found send error
 
 	// if category id available return it
 	return helper.ToCategoryResponse(category)
 }
 
-func (service CategoryServiceImpl) FindAll(ctx context.Context) []web.CategoryResponse {
+func (service *CategoryServiceImpl) FindAll(ctx context.Context) []web.CategoryResponse {
 	tx, err := service.DB.Begin()
 	helper.PanicIfError(err)
 	defer helper.CommitOrRollback(tx)
